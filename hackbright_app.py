@@ -36,12 +36,25 @@ def add_project(title, description, max_grade):
 
 def query_grade(student_github, project_title):
 # Query for a student's grade given a project
-    query = """SELECT project_title from Grades (grade) WHERE project_title = ?"""
-    DB.execute(query, (student_github, project_title))
+    query = """SELECT project_title, grade, student_github FROM Grades WHERE student_github = ? AND project_title = ?"""
+    DB.execute(query, (student_github, project_title,))
     row = DB.fetchone()
-    print row
-    print """%s received %s on %s project.""" (row[1], row[3], row[2])
+    print """%s received %s on %s project.""" %(row[2], row[1], row[0])
 
+def grade_assign(student_github, project_title, grade):
+    # Give a grade to a student
+    query = """INSERT into Grades (student_github, project_title, grade) values (?, ?, ?)"""
+    DB.execute(query, (student_github, project_title, grade))
+    CONN.commit()
+    print "Successfully added student (%s) grade: %s to Project %s" %(student_github, grade, project_title)
+
+def show_grade(student_github):
+    # Show all the grades for a student
+    query = """SELECT project_title, grade FROM Grades WHERE student_github = ?"""
+    DB.execute(query, (student_github,))
+    row = DB.fetchall()
+    print row
+    print """%s received grades: %s""" %(student_github, row[:])
 
 def main():
     connect_to_db()
@@ -63,6 +76,10 @@ def main():
             add_project(*args)
         elif command == "project_grade":
             query_grade(*args)
+        elif command == "assign_grade":
+            grade_assign(*args)
+        elif command == "show_grade":
+            show_grade(*args)
 
     CONN.close()
 
